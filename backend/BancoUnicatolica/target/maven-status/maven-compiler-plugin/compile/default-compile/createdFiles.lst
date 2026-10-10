@@ -1,1 +1,3 @@
 com\unicatolica\banco\BancoUnicatolica.class
+com\unicatolica\banco\config\PruebaConexion.class
+com\unicatolica\banco\config\ConexionBD.class
