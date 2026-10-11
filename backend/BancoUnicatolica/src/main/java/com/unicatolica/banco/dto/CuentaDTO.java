@@ -4,17 +4,17 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 public class CuentaDTO implements Serializable {
-    private Long idCuenta;
+    private Integer idCuenta;
     private String numeroCuenta;
     private String tipoCuenta; // AHORROS o CORRIENTE
     private String estado;     // ACTIVA o INACTIVA
     private BigDecimal saldo;
-    private Long idCliente;
+    private Integer idCliente;
     private String nombreCliente;
 
     public CuentaDTO() {}
 
-    public CuentaDTO(Long idCuenta, String numeroCuenta, String tipoCuenta, String estado, BigDecimal saldo, Long idCliente, String nombreCliente) {
+    public CuentaDTO(Integer idCuenta, String numeroCuenta, String tipoCuenta, String estado, BigDecimal saldo, Integer idCliente, String nombreCliente) {
         this.idCuenta = idCuenta;
         this.numeroCuenta = numeroCuenta;
         this.tipoCuenta = tipoCuenta;
@@ -25,8 +25,8 @@ public class CuentaDTO implements Serializable {
     }
 
     // Getters y Setters
-    public Long getIdCuenta() { return idCuenta; }
-    public void setIdCuenta(Long idCuenta) { this.idCuenta = idCuenta; }
+    public Integer getIdCuenta() { return idCuenta; }
+    public void setIdCuenta(Integer idCuenta) { this.idCuenta = idCuenta; }
 
     public String getNumeroCuenta() { return numeroCuenta; }
     public void setNumeroCuenta(String numeroCuenta) { this.numeroCuenta = numeroCuenta; }
@@ -40,8 +40,8 @@ public class CuentaDTO implements Serializable {
     public BigDecimal getSaldo() { return saldo; }
     public void setSaldo(BigDecimal saldo) { this.saldo = saldo; }
 
-    public Long getIdCliente() { return idCliente; }
-    public void setIdCliente(Long idCliente) { this.idCliente = idCliente; }
+    public Integer getIdCliente() { return idCliente; }
+    public void setIdCliente(Integer idCliente) { this.idCliente = idCliente; }
 
     public String getNombreCliente() { return nombreCliente; }
     public void setNombreCliente(String nombreCliente) { this.nombreCliente = nombreCliente; }

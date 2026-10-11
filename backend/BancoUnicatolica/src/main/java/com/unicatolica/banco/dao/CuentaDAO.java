@@ -252,5 +252,64 @@ public class CuentaDAO {
 
         return cuenta;
     }
+    
+    // 1. Necesario para buscar por ID numérico en actualizar/eliminar
+    public Cuenta buscarPorId(Integer idCuenta) throws SQLException, IOException {
+        String sql = """
+            SELECT idCuenta, numeroCuenta, idCliente, tipoCuenta,
+                   estado, saldo, fechaHoraCreacion
+            FROM Cuenta
+            WHERE idCuenta = ?
+            """;
+
+        try (Connection conexion = ConexionBD.conectar();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+
+            sentencia.setInt(1, idCuenta);
+
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (resultado.next()) {
+                    return mapearCuenta(resultado);
+                }
+            }
+        }
+        return null;
+    }
+
+    // 2. Necesario para validar RN07 (número de cuenta único)
+    public boolean existePorNumeroCuenta(String numeroCuenta) throws SQLException, IOException {
+        String sql = "SELECT COUNT(*) FROM Cuenta WHERE numeroCuenta = ?";
+
+        try (Connection conexion = ConexionBD.conectar();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+
+            sentencia.setString(1, numeroCuenta);
+
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (resultado.next()) {
+                    return resultado.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 3. Necesario para validar si se puede eliminar sin borrar historial
+    public boolean tieneTransaccionesAsociadas(Integer idCuenta) throws SQLException, IOException {
+        String sql = "SELECT COUNT(*) FROM Transaccion WHERE idCuenta = ?";
+
+        try (Connection conexion = ConexionBD.conectar();
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
+
+            sentencia.setInt(1, idCuenta);
+
+            try (ResultSet resultado = sentencia.executeQuery()) {
+                if (resultado.next()) {
+                    return resultado.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
 }
 
