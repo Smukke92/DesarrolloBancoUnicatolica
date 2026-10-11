@@ -338,7 +338,12 @@ public class VistaCliente extends JPanel {
         dto.setTelefono(txtTelefono.getText().trim());
         dto.setEmail(txtEmail.getText().trim());
         dto.setDireccion(txtDireccion.getText().trim());
-        dto.setFechaNacimiento(txtFechaNacimiento.getText().trim());
+        String fechaTxt = txtFechaNacimiento.getText().trim();
+        if (!fechaTxt.isEmpty()) {
+            dto.setFechaNacimiento(java.time.LocalDate.parse(fechaTxt));
+        } else {
+            dto.setFechaNacimiento(null);
+        }
         return dto;
     }
 

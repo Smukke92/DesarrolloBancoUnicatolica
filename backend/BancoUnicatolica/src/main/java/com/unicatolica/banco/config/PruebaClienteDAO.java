@@ -13,7 +13,7 @@ public class PruebaClienteDAO {
 
         Cliente cliente = new Cliente(
             null,
-            "123456789",
+            "1234567890",
             "Juan Perez",
             "3001234567",
             "juan@example.com",
