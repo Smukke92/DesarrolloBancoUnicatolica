@@ -1,11 +1,18 @@
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\BancoUnicatolica.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\ConexionBD.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaActualizarCliente.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarCliente.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarClientes.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaClienteDAO.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaConexion.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaEliminarCliente.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaListarClientes.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dao\ClienteDAO.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\model\Cliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\BancoUnicatolica.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\ConexionBD.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaActualizarCliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarCliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarClientes.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaClienteDAO.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaConexion.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaEliminarCliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaListarClientes.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dao\ClienteDAO.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\ClienteDTO.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\CuentaDTO.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\ResultadoTransaccionDTO.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\model\Cliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VentanaPrincipal.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VistaCliente.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VistaCuenta.java
+C:\Users\bluis\Documents\NetBeansProjects\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VistaTransaccion.java
