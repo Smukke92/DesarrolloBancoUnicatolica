@@ -3,6 +3,7 @@ C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\bac
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaCuentaService.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaDAO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaTransaccionDAO.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaTransaccionService.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaActualizarCliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarCliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarClientes.java
@@ -16,8 +17,10 @@ C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\bac
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dao\TransaccionDAO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\ClienteDTO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\CuentaDTO.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\EstadoCuentaDTO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\FiltroCuentaDTO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\ResultadoTransaccionDTO.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\dto\TransaccionDTO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\model\Cliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\model\Cuenta.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\model\enums\EstadoCuenta.java
@@ -26,6 +29,8 @@ C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\bac
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\service\CuentaService.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\service\impl\ClienteServiceImpl.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\service\impl\CuentaServiceImpl.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\service\impl\TransaccionServiceImpl.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\service\TransaccionService.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\ComprobanteDialog.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VentanaPrincipal.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\vistas\VistaCliente.java

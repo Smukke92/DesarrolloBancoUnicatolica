@@ -1,9 +1,11 @@
 com\unicatolica\banco\service\CuentaService.class
 com\unicatolica\banco\config\PruebaListarClientes.class
+com\unicatolica\banco\dto\TransaccionDTO.class
 com\unicatolica\banco\vistas\VistaCliente$2.class
 com\unicatolica\banco\vistas\VistaTransaccion$1.class
 com\unicatolica\banco\vistas\VistaCuenta$1.class
 com\unicatolica\banco\model\enums\EstadoCuenta.class
+com\unicatolica\banco\service\impl\TransaccionServiceImpl.class
 com\unicatolica\banco\vistas\VistaCuenta.class
 com\unicatolica\banco\BancoUnicatolica.class
 com\unicatolica\banco\service\impl\ClienteServiceImpl.class
@@ -19,6 +21,7 @@ com\unicatolica\banco\vistas\ComprobanteDialog.class
 com\unicatolica\banco\vistas\VentanaPrincipal.class
 com\unicatolica\banco\service\impl\CuentaServiceImpl.class
 com\unicatolica\banco\config\MainPruebaDAO.class
+com\unicatolica\banco\dto\EstadoCuentaDTO.class
 com\unicatolica\banco\vistas\VistaTransaccion$2.class
 com\unicatolica\banco\config\PruebaBuscarClientes.class
 com\unicatolica\banco\dto\ClienteDTO.class
@@ -27,9 +30,11 @@ com\unicatolica\banco\config\PruebaMainClienteService.class
 com\unicatolica\banco\dao\CuentaDAO.class
 com\unicatolica\banco\dao\ClienteDAO.class
 com\unicatolica\banco\vistas\VistaCliente.class
+com\unicatolica\banco\service\TransaccionService.class
 com\unicatolica\banco\config\MainPruebaTransaccionDAO.class
 com\unicatolica\banco\service\ClienteService.class
 com\unicatolica\banco\config\MainPruebaCuentaService.class
+com\unicatolica\banco\config\MainPruebaTransaccionService.class
 com\unicatolica\banco\vistas\VistaCuenta$2.class
 com\unicatolica\banco\dto\ResultadoTransaccionDTO.class
 com\unicatolica\banco\config\PruebaEliminarCliente.class

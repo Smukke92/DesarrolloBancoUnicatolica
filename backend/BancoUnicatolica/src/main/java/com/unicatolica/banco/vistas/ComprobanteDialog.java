@@ -5,6 +5,7 @@ import com.unicatolica.banco.dto.ResultadoTransaccionDTO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.time.LocalDateTime;
 
 public class ComprobanteDialog extends JDialog {
 
@@ -57,8 +58,7 @@ public class ComprobanteDialog extends JDialog {
         String montoTx = (resultado.getMonto() != null) ? "$ " + resultado.getMonto().toString() : "$ 0.00";
         String saldoAnt = (resultado.getSaldoAnterior() != null) ? "$ " + resultado.getSaldoAnterior().toString() : "$ 0.00";
         String saldoNue = (resultado.getSaldoNuevo() != null) ? "$ " + resultado.getSaldoNuevo().toString() : "$ 0.00";
-        String fechaHora = (resultado.getFechaHora() != null) ? resultado.getFechaHora() : "Reciente";
-
+        String fechaHora = (resultado.getFechaHora() != null ? resultado.getFechaHora().toString() : "");
         // Fila 0: N° Transacción
         agregarFilaDetalle(panelDetalles, gbc, 0, "N° Transacción:", idTx, true);
         

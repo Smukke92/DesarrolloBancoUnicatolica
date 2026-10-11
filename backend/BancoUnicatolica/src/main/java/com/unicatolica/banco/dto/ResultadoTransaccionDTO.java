@@ -2,21 +2,22 @@ package com.unicatolica.banco.dto;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class ResultadoTransaccionDTO implements Serializable {
-    private Long idTransaccion;
+    private Integer idTransaccion;
     private String numeroCuenta;
     private String tipoTransaccion;
     private BigDecimal monto;
     private BigDecimal saldoAnterior;
     private BigDecimal saldoNuevo;
-    private String fechaHora;
+    private LocalDateTime fechaHora;
 
     public ResultadoTransaccionDTO() {}
 
     // Getters y Setters
-    public Long getIdTransaccion() { return idTransaccion; }
-    public void setIdTransaccion(Long idTransaccion) { this.idTransaccion = idTransaccion; }
+    public Integer getIdTransaccion() { return idTransaccion; }
+    public void setIdTransaccion(Integer idTransaccion) { this.idTransaccion = idTransaccion; }
 
     public String getNumeroCuenta() { return numeroCuenta; }
     public void setNumeroCuenta(String numeroCuenta) { this.numeroCuenta = numeroCuenta; }
@@ -33,6 +34,6 @@ public class ResultadoTransaccionDTO implements Serializable {
     public BigDecimal getSaldoNuevo() { return saldoNuevo; }
     public void setSaldoNuevo(BigDecimal saldoNuevo) { this.saldoNuevo = saldoNuevo; }
 
-    public String getFechaHora() { return fechaHora; }
-    public void setFechaHora(String fechaHora) { this.fechaHora = fechaHora; }
+    public LocalDateTime getFechaHora() { return fechaHora; }
+    public void setFechaHora(LocalDateTime fechaHora) { this.fechaHora = fechaHora; }
 }
