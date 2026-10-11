@@ -1,6 +1,11 @@
+com\unicatolica\banco\config\PruebaListarClientes.class
+com\unicatolica\banco\config\PruebaBuscarClientes.class
 com\unicatolica\banco\model\Cliente.class
 com\unicatolica\banco\dao\ClienteDAO.class
+com\unicatolica\banco\config\PruebaActualizarCliente.class
 com\unicatolica\banco\BancoUnicatolica.class
+com\unicatolica\banco\config\PruebaEliminarCliente.class
+com\unicatolica\banco\config\PruebaBuscarCliente.class
 com\unicatolica\banco\config\PruebaConexion.class
 com\unicatolica\banco\config\ConexionBD.class
 com\unicatolica\banco\config\PruebaClienteDAO.class
