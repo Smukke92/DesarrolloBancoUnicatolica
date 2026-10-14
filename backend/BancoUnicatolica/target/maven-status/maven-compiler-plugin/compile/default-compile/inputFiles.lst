@@ -1,14 +1,12 @@
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\BancoUnicatolica.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\ConexionBD.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaCuentaService.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaDAO.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaTransaccionDAO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\MainPruebaTransaccionService.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaActualizarCliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarCliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaBuscarClientes.java
-C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaClienteDAO.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaConexion.java
+C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaDAOs.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaEliminarCliente.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaListarClientes.java
 C:\Users\Daniel González\Universidad\Prototipado\DesarrolloBancoUnicatolica\backend\BancoUnicatolica\src\main\java\com\unicatolica\banco\config\PruebaMainClienteService.java

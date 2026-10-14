@@ -11,7 +11,8 @@ CREATE TABLE Cliente (
     telefono VARCHAR(30),
     email VARCHAR(120),
     direccion VARCHAR(200),
-    fechaNacimiento DATE NOT NULL
+    fechaNacimiento DATE NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 CREATE TABLE Cuenta (

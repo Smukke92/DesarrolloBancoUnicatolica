@@ -19,9 +19,10 @@ public class ClienteDAO {
                 telefono,
                 email,
                 direccion,
-                fechaNacimiento
+                fechaNacimiento,
+                activo
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
 
         try (Connection conexion = ConexionBD.conectar();
@@ -46,6 +47,10 @@ public class ClienteDAO {
                 );
             }
 
+            // Si el objeto no define activo explicitly, por defecto se registra activo (true)
+            boolean estaActivo = cliente.getActivo() != null ? cliente.getActivo() : true;
+            sentencia.setBoolean(7, estaActivo);
+
             int filasInsertadas = sentencia.executeUpdate();
 
             if (filasInsertadas > 0) {
@@ -65,7 +70,7 @@ public class ClienteDAO {
 
         String sql = """
             SELECT idCliente, cedula, nombreCliente, telefono,
-                   email, direccion, fechaNacimiento
+                   email, direccion, fechaNacimiento, activo
             FROM Cliente
             WHERE idCliente = ?
             """;
@@ -88,7 +93,7 @@ public class ClienteDAO {
 
         String sql = """
             SELECT idCliente, cedula, nombreCliente, telefono,
-                   email, direccion, fechaNacimiento
+                   email, direccion, fechaNacimiento, activo
             FROM Cliente
             WHERE cedula = ?
             """;
@@ -125,14 +130,16 @@ public class ClienteDAO {
         return false;
     }
 
+    // Devuelve por defecto solo los clientes activos
     public List<Cliente> listarClientes() throws SQLException, IOException {
 
         List<Cliente> clientes = new ArrayList<>();
 
         String sql = """
             SELECT idCliente, cedula, nombreCliente, telefono,
-                   email, direccion, fechaNacimiento
+                   email, direccion, fechaNacimiento, activo
             FROM Cliente
+            WHERE activo = TRUE
             ORDER BY idCliente
             """;
 
@@ -148,15 +155,16 @@ public class ClienteDAO {
         return clientes;
     }
 
+    // Busca únicamente entre los clientes activos
     public List<Cliente> buscarClientes(String criterio) throws SQLException, IOException {
 
         List<Cliente> clientes = new ArrayList<>();
 
         String sql = """
             SELECT idCliente, cedula, nombreCliente, telefono,
-                   email, direccion, fechaNacimiento
+                   email, direccion, fechaNacimiento, activo
             FROM Cliente
-            WHERE cedula LIKE ? OR nombreCliente LIKE ?
+            WHERE activo = TRUE AND (cedula LIKE ? OR nombreCliente LIKE ?)
             ORDER BY idCliente
             """;
 
@@ -185,7 +193,8 @@ public class ClienteDAO {
                 telefono = ?,
                 email = ?,
                 direccion = ?,
-                fechaNacimiento = ?
+                fechaNacimiento = ?,
+                activo = ?
             WHERE idCliente = ?
             """;
 
@@ -203,41 +212,40 @@ public class ClienteDAO {
                 sentencia.setNull(5, Types.DATE);
             }
 
-            sentencia.setInt(6, cliente.getIdCliente());
+            boolean estaActivo = cliente.getActivo() != null ? cliente.getActivo() : true;
+            sentencia.setBoolean(6, estaActivo);
+            sentencia.setInt(7, cliente.getIdCliente());
 
             return sentencia.executeUpdate() > 0;
         }
     }
 
+    // Borrado lógico: inactiva al cliente en lugar de eliminarlo físicamente
     public boolean eliminarCliente(Integer clienteId) throws SQLException, IOException {
 
-        String sqlVerificar = "SELECT COUNT(*) FROM Cuenta WHERE idCliente = ?";
-        String sqlEliminar = "DELETE FROM Cliente WHERE idCliente = ?";
+        String sqlInactivar = "UPDATE Cliente SET activo = FALSE WHERE idCliente = ? AND activo = TRUE";
 
-        try (Connection conexion = ConexionBD.conectar()) {
+        try (Connection conexion = ConexionBD.conectar();
+             PreparedStatement sentencia = conexion.prepareStatement(sqlInactivar)) {
 
-            // Verificar si el cliente tiene cuentas asociadas.
-            try (PreparedStatement sentencia = conexion.prepareStatement(sqlVerificar)) {
-
-                sentencia.setInt(1, clienteId);
-
-                try (ResultSet resultado = sentencia.executeQuery()) {
-                    if (resultado.next() && resultado.getInt(1) > 0) {
-                        // Mensaje estandarizado acorde al contrato
-                        throw new SQLException("CLIENTE_TIENE_CUENTAS");
-                    }
-                }
-            }
-
-            // Eliminar el cliente si no tiene cuentas.
-            try (PreparedStatement sentencia = conexion.prepareStatement(sqlEliminar)) {
-                sentencia.setInt(1, clienteId);
-                return sentencia.executeUpdate() > 0;
-            }
+            sentencia.setInt(1, clienteId);
+            return sentencia.executeUpdate() > 0;
         }
     }
 
-    // Método auxiliar privado para reducir duplicación de código al leer del ResultSet
+    // Permite reactivar un cliente previamente inactivado
+    public boolean reactivarCliente(Integer clienteId) throws SQLException, IOException {
+
+        String sqlReactivar = "UPDATE Cliente SET activo = TRUE WHERE idCliente = ? AND activo = FALSE";
+
+        try (Connection conexion = ConexionBD.conectar();
+             PreparedStatement sentencia = conexion.prepareStatement(sqlReactivar)) {
+
+            sentencia.setInt(1, clienteId);
+            return sentencia.executeUpdate() > 0;
+        }
+    }
+
     private Cliente mapearCliente(ResultSet resultado) throws SQLException {
         Cliente cliente = new Cliente();
         cliente.setIdCliente(resultado.getInt("idCliente"));
@@ -246,6 +254,7 @@ public class ClienteDAO {
         cliente.setTelefono(resultado.getString("telefono"));
         cliente.setEmail(resultado.getString("email"));
         cliente.setDireccion(resultado.getString("direccion"));
+        cliente.setActivo(resultado.getBoolean("activo"));
 
         Date fecha = resultado.getDate("fechaNacimiento");
         if (fecha != null) {

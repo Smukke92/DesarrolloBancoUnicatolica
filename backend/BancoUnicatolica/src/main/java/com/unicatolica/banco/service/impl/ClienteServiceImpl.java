@@ -35,12 +35,53 @@ public class ClienteServiceImpl implements ClienteService {
             }
 
             Cliente cliente = mapearADominio(clienteDTO);
+            // Si no se especifica el estado al registrar, se asume activo (true)
+            if (cliente.getActivo() == null) {
+                cliente.setActivo(true);
+            }
+
             boolean guardado = clienteDAO.registrar(cliente);
 
             if (!guardado) {
                 throw new RuntimeException("ERROR_REGISTRANDO_CLIENTE");
             }
 
+            return mapearADTO(cliente);
+
+        } catch (SQLException | java.io.IOException e) {
+            throw new RuntimeException("ERROR_BASE_DATOS: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public ClienteDTO buscarPorId(Integer idCliente) {
+        if (idCliente == null || idCliente <= 0) {
+            throw new IllegalArgumentException("CLIENTE_NO_VALIDO");
+        }
+
+        try {
+            Cliente cliente = clienteDAO.buscarPorId(idCliente);
+            if (cliente == null) {
+                return null;
+            }
+            return mapearADTO(cliente);
+
+        } catch (SQLException | java.io.IOException e) {
+            throw new RuntimeException("ERROR_BASE_DATOS: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public ClienteDTO buscarPorCedula(String cedula) {
+        if (esNuloOVacio(cedula)) {
+            throw new IllegalArgumentException("CLIENTE_NO_VALIDO");
+        }
+
+        try {
+            Cliente cliente = clienteDAO.buscarPorCedula(cedula.trim());
+            if (cliente == null) {
+                return null;
+            }
             return mapearADTO(cliente);
 
         } catch (SQLException | java.io.IOException e) {
@@ -100,12 +141,18 @@ public class ClienteServiceImpl implements ClienteService {
                 throw new IllegalArgumentException("CLIENTE_NO_ENCONTRADO");
             }
 
-            // Regla de Negocio RN02: La cédula no se puede modificar
+            // Regla de Negocio: La cédula no se puede modificar
             if (!clienteExistente.getCedula().equals(clienteDTO.getCedula())) {
                 throw new IllegalArgumentException("LA_IDENTIFICACION_NO_SE_PUEDE_MODIFICAR");
             }
 
             Cliente clienteAActualizar = mapearADominio(clienteDTO);
+            
+            // Conservar el estado activo previo si no se envía en el DTO
+            if (clienteDTO.getActivo() == null) {
+                clienteAActualizar.setActivo(clienteExistente.getActivo());
+            }
+
             boolean actualizado = clienteDAO.actualizarCliente(clienteAActualizar);
 
             if (!actualizado) {
@@ -120,8 +167,8 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     @Override
-    public void eliminarCliente(int clienteId) { // <--- Firma corregida con int
-        if (clienteId <= 0) {
+    public void eliminarCliente(Integer clienteId) {
+        if (clienteId == null || clienteId <= 0) {
             throw new IllegalArgumentException("CLIENTE_NO_VALIDO");
         }
 
@@ -131,19 +178,35 @@ public class ClienteServiceImpl implements ClienteService {
                 throw new IllegalArgumentException("CLIENTE_NO_ENCONTRADO");
             }
 
-            // El DAO se encarga de validar si tiene cuentas vinculadas
+            // Realiza la inactivación (Soft Delete) a nivel de base de datos
             boolean eliminado = clienteDAO.eliminarCliente(clienteId);
             if (!eliminado) {
                 throw new RuntimeException("ERROR_ELIMINANDO_CLIENTE");
             }
 
-        } catch (SQLException e) {
-            // Re-lanzar las excepciones de negocio del DAO
-            if ("CLIENTE_TIENE_CUENTAS".equals(e.getMessage())) {
-                throw new IllegalArgumentException("CLIENTE_TIENE_CUENTAS");
-            }
+        } catch (SQLException | java.io.IOException e) {
             throw new RuntimeException("ERROR_BASE_DATOS: " + e.getMessage(), e);
-        } catch (java.io.IOException e) {
+        }
+    }
+
+    @Override
+    public void reactivarCliente(Integer clienteId) {
+        if (clienteId == null || clienteId <= 0) {
+            throw new IllegalArgumentException("CLIENTE_NO_VALIDO");
+        }
+
+        try {
+            Cliente cliente = clienteDAO.buscarPorId(clienteId);
+            if (cliente == null) {
+                throw new IllegalArgumentException("CLIENTE_NO_ENCONTRADO");
+            }
+
+            boolean reactivado = clienteDAO.reactivarCliente(clienteId);
+            if (!reactivado) {
+                throw new RuntimeException("ERROR_REACTIVANDO_CLIENTE");
+            }
+
+        } catch (SQLException | java.io.IOException e) {
             throw new RuntimeException("ERROR_BASE_DATOS: " + e.getMessage(), e);
         }
     }
@@ -189,6 +252,7 @@ public class ClienteServiceImpl implements ClienteService {
         c.setEmail(dto.getEmail() != null ? dto.getEmail().trim() : null);
         c.setDireccion(dto.getDireccion() != null ? dto.getDireccion().trim() : null);
         c.setFechaNacimiento(dto.getFechaNacimiento());
+        c.setActivo(dto.getActivo());
         return c;
     }
 
@@ -201,6 +265,7 @@ public class ClienteServiceImpl implements ClienteService {
         dto.setEmail(c.getEmail());
         dto.setDireccion(c.getDireccion());
         dto.setFechaNacimiento(c.getFechaNacimiento());
+        dto.setActivo(c.getActivo());
         return dto;
     }
 }

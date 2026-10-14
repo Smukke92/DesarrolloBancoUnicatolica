@@ -11,7 +11,8 @@ public class Cliente {
     private String email;
     private String direccion;
     private LocalDate fechaNacimiento;
-
+    private Boolean activo;
+    
     public Cliente() {
     }
 
@@ -22,7 +23,8 @@ public class Cliente {
             String telefono,
             String email,
             String direccion,
-            LocalDate fechaNacimiento) {
+            LocalDate fechaNacimiento,
+            Boolean activo) {
 
         this.idCliente = idCliente;
         this.cedula = cedula;
@@ -31,6 +33,7 @@ public class Cliente {
         this.email = email;
         this.direccion = direccion;
         this.fechaNacimiento = fechaNacimiento;
+        this.activo = activo;
     }
 
     public Integer getIdCliente() {
@@ -87,5 +90,13 @@ public class Cliente {
 
     public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+    
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

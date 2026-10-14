@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 public class ClienteDTO implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
+
     private Integer idCliente;
     private String cedula;
     private String nombreCliente;
@@ -11,10 +14,12 @@ public class ClienteDTO implements Serializable {
     private String email;
     private String direccion;
     private LocalDate fechaNacimiento;
+    private Boolean activo;
 
     public ClienteDTO() {}
 
-    public ClienteDTO(Integer idCliente, String cedula, String nombreCliente, String telefono, String email, String direccion, LocalDate fechaNacimiento) {
+    public ClienteDTO(Integer idCliente, String cedula, String nombreCliente, String telefono, 
+                      String email, String direccion, LocalDate fechaNacimiento, Boolean activo) {
         this.idCliente = idCliente;
         this.cedula = cedula;
         this.nombreCliente = nombreCliente;
@@ -22,6 +27,7 @@ public class ClienteDTO implements Serializable {
         this.email = email;
         this.direccion = direccion;
         this.fechaNacimiento = fechaNacimiento;
+        this.activo = activo;
     }
 
     // Getters y Setters
@@ -45,4 +51,11 @@ public class ClienteDTO implements Serializable {
 
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+
+    public Boolean getActivo() { return activo; }
+    
+    // Método auxiliar común para tipos booleanos en Java / frameworks (JSON, JSF, Thymeleaf)
+    public Boolean isActivo() { return activo; }
+    
+    public void setActivo(Boolean activo) { this.activo = activo; }
 }

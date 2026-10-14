@@ -1,4 +1,3 @@
-
 package com.unicatolica.banco.dao;
 
 import com.unicatolica.banco.config.ConexionBD;
@@ -7,9 +6,9 @@ import com.unicatolica.banco.model.Transaccion;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
 
 public class TransaccionDAO {
 
@@ -21,15 +20,15 @@ public class TransaccionDAO {
                    t.monto, t.fechaHora
             FROM Transaccion t
             INNER JOIN Cuenta c ON c.idCuenta = t.idCuenta
-            WHERE c.numeroCuenta = ?
+            INNER JOIN Cliente cl ON cl.idCliente = c.idCliente
+            WHERE c.numeroCuenta = ? AND cl.activo = TRUE
             ORDER BY t.fechaHora DESC, t.idTransaccion DESC
             """;
 
         List<Transaccion> transacciones = new ArrayList<>();
 
         try (Connection conexion = ConexionBD.conectar();
-             PreparedStatement sentencia =
-                     conexion.prepareStatement(sql)) {
+             PreparedStatement sentencia = conexion.prepareStatement(sql)) {
 
             sentencia.setString(1, numeroCuenta);
 
@@ -72,12 +71,14 @@ public class TransaccionDAO {
             try {
                 Integer idCuenta;
                 BigDecimal saldoActual;
-                String estado;
+                String estadoCuenta;
+                boolean clienteActivo;
 
                 String sqlCuenta = """
-                    SELECT idCuenta, saldo, estado
-                    FROM Cuenta
-                    WHERE numeroCuenta = ?
+                    SELECT c.idCuenta, c.saldo, c.estado, cl.activo
+                    FROM Cuenta c
+                    INNER JOIN Cliente cl ON cl.idCliente = c.idCliente
+                    WHERE c.numeroCuenta = ?
                     FOR UPDATE
                     """;
 
@@ -88,17 +89,23 @@ public class TransaccionDAO {
 
                     try (ResultSet resultado = sentencia.executeQuery()) {
                         if (!resultado.next()) {
-                            throw new SQLException(
-                                    "CUENTA_NO_ENCONTRADA");
+                            throw new SQLException("CUENTA_NO_ENCONTRADA");
                         }
 
                         idCuenta = resultado.getInt("idCuenta");
                         saldoActual = resultado.getBigDecimal("saldo");
-                        estado = resultado.getString("estado");
+                        estadoCuenta = resultado.getString("estado");
+                        clienteActivo = resultado.getBoolean("activo");
                     }
                 }
 
-                if (!"ACTIVA".equals(estado)) {
+                // Validar que el cliente dueño de la cuenta esté activo
+                if (!clienteActivo) {
+                    throw new SQLException("CLIENTE_INACTIVO");
+                }
+
+                // Validar que la cuenta esté activa
+                if (!"ACTIVA".equals(estadoCuenta)) {
                     throw new SQLException("CUENTA_INACTIVA");
                 }
 
@@ -109,14 +116,12 @@ public class TransaccionDAO {
                 } else if ("RETIRO".equals(tipo)) {
 
                     if (saldoActual.compareTo(monto) < 0) {
-                        throw new SQLException(
-                                "FONDOS_INSUFICIENTES");
+                        throw new SQLException("FONDOS_INSUFICIENTES");
                     }
 
                     nuevoSaldo = saldoActual.subtract(monto);
                 } else {
-                    throw new SQLException(
-                            "TIPO_TRANSACCION_NO_VALIDO");
+                    throw new SQLException("TIPO_TRANSACCION_NO_VALIDO");
                 }
 
                 String sqlTransaccion = """
@@ -136,16 +141,12 @@ public class TransaccionDAO {
                     sentencia.setBigDecimal(3, monto);
 
                     if (sentencia.executeUpdate() == 0) {
-                        throw new SQLException(
-                                "ERROR_REGISTRANDO_TRANSACCION");
+                        throw new SQLException("ERROR_REGISTRANDO_TRANSACCION");
                     }
 
-                    try (ResultSet claves =
-                                 sentencia.getGeneratedKeys()) {
-
+                    try (ResultSet claves = sentencia.getGeneratedKeys()) {
                         if (!claves.next()) {
-                            throw new SQLException(
-                                    "ERROR_REGISTRANDO_TRANSACCION");
+                            throw new SQLException("ERROR_REGISTRANDO_TRANSACCION");
                         }
 
                         idTransaccion = claves.getInt(1);
@@ -165,8 +166,7 @@ public class TransaccionDAO {
                     sentencia.setInt(2, idCuenta);
 
                     if (sentencia.executeUpdate() != 1) {
-                        throw new SQLException(
-                                "ERROR_ACTUALIZANDO_SALDO");
+                        throw new SQLException("ERROR_ACTUALIZANDO_SALDO");
                     }
                 }
 
@@ -204,8 +204,7 @@ public class TransaccionDAO {
 
         Transaccion transaccion = new Transaccion();
 
-        transaccion.setIdTransaccion(
-                resultado.getInt("idTransaccion"));
+        transaccion.setIdTransaccion(resultado.getInt("idTransaccion"));
         transaccion.setIdCuenta(resultado.getInt("idCuenta"));
         transaccion.setTipo(resultado.getString("tipo"));
         transaccion.setMonto(resultado.getBigDecimal("monto"));
