@@ -1,19 +1,19 @@
 package com.unicatolica.banco.vistas;
 
 import com.unicatolica.banco.dto.ClienteDTO;
+import com.unicatolica.banco.service.ClienteService;
+import com.unicatolica.banco.service.impl.ClienteServiceImpl;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.AbstractDocument;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.time.LocalDate;
+import java.util.List;
 
 public class VistaCliente extends JPanel {
 
@@ -36,7 +36,18 @@ public class VistaCliente extends JPanel {
     private JTable tablaClientes;
     private DefaultTableModel modeloTabla;
 
+    private ClienteService clienteService;
+    private Integer idClienteSeleccionado = null;
+
+    // Constructor por defecto (crea la instancia del servicio)
     public VistaCliente() {
+        this(new ClienteServiceImpl());
+    }
+
+    // Constructor con Inyección de Dependencia
+    public VistaCliente(ClienteService clienteService) {
+        this.clienteService = clienteService;
+
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(247, 250, 252));
 
@@ -56,6 +67,9 @@ public class VistaCliente extends JPanel {
         splitPane.setResizeWeight(0.4);
 
         add(splitPane, BorderLayout.CENTER);
+
+        // 5. Cargar lista inicial
+        cargarTodosLosClientes();
     }
 
     private JPanel crearPanelFormulario() {
@@ -150,7 +164,7 @@ public class VistaCliente extends JPanel {
         JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtBuscar = new JTextField(20);
         btnBuscar = new JButton("🔍 Buscar");
-        panelBusqueda.add(new JLabel("Buscar (ID/Nombre):"));
+        panelBusqueda.add(new JLabel("Buscar (Cédula/Nombre):"));
         panelBusqueda.add(txtBuscar);
         panelBusqueda.add(btnBuscar);
 
@@ -171,31 +185,34 @@ public class VistaCliente extends JPanel {
         return panel;
     }
 
-    /**
-     * Programación de los Listeners de la interfaz.
-     */
     private void asignarEventos() {
-        // Evento Botón Limpiar
         btnLimpiar.addActionListener(e -> limpiarFormulario());
-
-        // Evento Botón Guardar (RF01)
         btnGuardar.addActionListener(e -> accionGuardar());
-
-        // Evento Botón Modificar (RF03)
         btnModificar.addActionListener(e -> accionModificar());
-
-        // Evento Botón Eliminar (RF04)
         btnEliminar.addActionListener(e -> accionEliminar());
-
-        // Evento Botón Buscar (RF02)
         btnBuscar.addActionListener(e -> accionBuscar());
 
-        // Evento de Selección en Tabla (Autocompletar formulario al hacer clic en una fila)
         tablaClientes.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tablaClientes.getSelectedRow() != -1) {
                 cargarDatosSeleccionados();
             }
         });
+    }
+
+    private void cargarTodosLosClientes() {
+        modeloTabla.setRowCount(0);
+        try {
+            List<ClienteDTO> lista = clienteService.listarClientes();
+            for (ClienteDTO c : lista) {
+                modeloTabla.addRow(new Object[]{
+                        c.getIdCliente(), c.getCedula(), c.getNombreCliente(), c.getTelefono(),
+                        c.getEmail(), c.getDireccion(), c.getFechaNacimiento()
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al cargar la lista de clientes: " + ex.getMessage(),
+                    "Error DB", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void accionGuardar() {
@@ -213,20 +230,25 @@ public class VistaCliente extends JPanel {
             return;
         }
 
-        ClienteDTO dto = obtenerClienteDesdeFormulario();
+        try {
+            ClienteDTO dto = obtenerClienteDesdeFormulario();
+            clienteService.registrarCliente(dto);
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // clienteService.registrarCliente(dto);
-        
-        JOptionPane.showMessageDialog(this,
-                "Cliente registrado exitosamente (Listo para conectar a DB).",
-                "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Cliente registrado exitosamente.",
+                    "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
 
-        limpiarFormulario();
+            limpiarFormulario();
+            cargarTodosLosClientes();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al registrar cliente: " + ex.getMessage(),
+                    "Error de Operación", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void accionModificar() {
-        if (txtCedula.isEnabled()) {
+        if (idClienteSeleccionado == null) {
             JOptionPane.showMessageDialog(this,
                     "Debe seleccionar un cliente de la tabla para modificarlo.",
                     "Selección Requerida", JOptionPane.WARNING_MESSAGE);
@@ -240,20 +262,27 @@ public class VistaCliente extends JPanel {
             return;
         }
 
-        ClienteDTO dto = obtenerClienteDesdeFormulario();
+        try {
+            ClienteDTO dto = obtenerClienteDesdeFormulario();
+            dto.setIdCliente(idClienteSeleccionado);
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // clienteService.actualizarCliente(dto);
+            clienteService.actualizarCliente(dto);
 
-        JOptionPane.showMessageDialog(this,
-                "Datos del cliente actualizados correctamente.",
-                "Actualización Exitosa", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Datos del cliente actualizados correctamente.",
+                    "Actualización Exitosa", JOptionPane.INFORMATION_MESSAGE);
 
-        limpiarFormulario();
+            limpiarFormulario();
+            cargarTodosLosClientes();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al modificar cliente: " + ex.getMessage(),
+                    "Error de Operación", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void accionEliminar() {
-        if (txtCedula.isEnabled() && tablaClientes.getSelectedRow() == -1) {
+        if (idClienteSeleccionado == null) {
             JOptionPane.showMessageDialog(this,
                     "Debe seleccionar un cliente de la tabla para eliminarlo.",
                     "Selección Requerida", JOptionPane.WARNING_MESSAGE);
@@ -265,45 +294,69 @@ public class VistaCliente extends JPanel {
                 "Confirmar Eliminación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-            // clienteService.eliminarCliente(id);
-            JOptionPane.showMessageDialog(this,
-                    "Cliente eliminado correctamente del sistema.",
-                    "Operación Completada", JOptionPane.INFORMATION_MESSAGE);
-            limpiarFormulario();
+            try {
+                clienteService.eliminarCliente(idClienteSeleccionado);
+
+                JOptionPane.showMessageDialog(this,
+                        "Cliente eliminado correctamente del sistema.",
+                        "Operación Completada", JOptionPane.INFORMATION_MESSAGE);
+
+                limpiarFormulario();
+                cargarTodosLosClientes();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al eliminar cliente: " + ex.getMessage(),
+                        "Error de Operación", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
     private void accionBuscar() {
         String criterio = txtBuscar.getText().trim();
         if (criterio.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese un número de cédula o nombre para buscar.",
-                    "Criterio Vacío", JOptionPane.INFORMATION_MESSAGE);
+            cargarTodosLosClientes();
             return;
         }
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // List<ClienteDTO> resultados = clienteService.buscarClientes(criterio);
+        modeloTabla.setRowCount(0);
+        try {
+            List<ClienteDTO> resultados = clienteService.buscarClientes(criterio);
+            for (ClienteDTO c : resultados) {
+                modeloTabla.addRow(new Object[]{
+                        c.getIdCliente(), c.getCedula(), c.getNombreCliente(), c.getTelefono(),
+                        c.getEmail(), c.getDireccion(), c.getFechaNacimiento()
+                });
+            }
+            if (resultados.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No se encontraron clientes con el criterio ingresado.",
+                        "Sin Coincidencias", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al buscar clientes: " + ex.getMessage(),
+                    "Error de Búsqueda", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void cargarDatosSeleccionados() {
         int fila = tablaClientes.getSelectedRow();
         if (fila >= 0) {
+            idClienteSeleccionado = Integer.parseInt(modeloTabla.getValueAt(fila, 0).toString());
             txtCedula.setText(modeloTabla.getValueAt(fila, 1).toString());
             txtNombre.setText(modeloTabla.getValueAt(fila, 2).toString());
             txtTelefono.setText(modeloTabla.getValueAt(fila, 3).toString());
             txtEmail.setText(modeloTabla.getValueAt(fila, 4).toString());
             txtDireccion.setText(modeloTabla.getValueAt(fila, 5).toString());
-            txtFechaNacimiento.setText(modeloTabla.getValueAt(fila, 6).toString());
 
-            // RF03: La cédula no debe ser editable tras la creación
+            Object fechaObj = modeloTabla.getValueAt(fila, 6);
+            txtFechaNacimiento.setText(fechaObj != null ? fechaObj.toString() : "");
+
             txtCedula.setEnabled(false);
             txtCedula.setBackground(new Color(235, 235, 235));
         }
     }
 
     private void limpiarFormulario() {
+        idClienteSeleccionado = null;
         txtCedula.setText("");
         txtNombre.setText("");
         txtTelefono.setText("");
@@ -312,7 +365,6 @@ public class VistaCliente extends JPanel {
         txtFechaNacimiento.setText("");
         txtBuscar.setText("");
 
-        // Reactivar la edición de cédula para un nuevo registro
         txtCedula.setEnabled(true);
         txtCedula.setBackground(Color.WHITE);
         tablaClientes.clearSelection();
@@ -340,7 +392,7 @@ public class VistaCliente extends JPanel {
         dto.setDireccion(txtDireccion.getText().trim());
         String fechaTxt = txtFechaNacimiento.getText().trim();
         if (!fechaTxt.isEmpty()) {
-            dto.setFechaNacimiento(java.time.LocalDate.parse(fechaTxt));
+            dto.setFechaNacimiento(LocalDate.parse(fechaTxt));
         } else {
             dto.setFechaNacimiento(null);
         }

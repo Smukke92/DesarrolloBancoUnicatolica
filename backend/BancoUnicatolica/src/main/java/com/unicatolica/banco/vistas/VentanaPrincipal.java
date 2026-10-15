@@ -1,12 +1,16 @@
 package com.unicatolica.banco.vistas;
 
+import com.unicatolica.banco.dao.ClienteDAO;
+import com.unicatolica.banco.service.ClienteService;
+import com.unicatolica.banco.service.impl.ClienteServiceImpl;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class VentanaPrincipal extends JFrame {
 
     private JTabbedPane tabbedPane;
-    private VistaCliente panelClientes; // Declarado directamente como VistaCliente
+    private VistaCliente panelClientes;
     private VistaCuenta panelCuentas;
     private VistaTransaccion panelTransacciones;
 
@@ -31,20 +35,24 @@ public class VentanaPrincipal extends JFrame {
         tabbedPane = new JTabbedPane();
         tabbedPane.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // 4. Instanciar los paneles modulares de cada pestaña
-        panelClientes = new VistaCliente(); 
-        panelCuentas = new VistaCuenta();
-        panelTransacciones = new VistaTransaccion();
+        // 4. Inicializar capas del backend (DAO y Services)
+        ClienteDAO clienteDAO = new ClienteDAO();
+        ClienteService clienteService = new ClienteServiceImpl(clienteDAO);
 
-        // 5. Agregar las pestañas
+        // 5. Instanciar los paneles inyectándoles los servicios correspondientes
+        panelClientes = new VistaCliente(clienteService);
+        panelCuentas = new VistaCuenta(); // Pásale su Service si tu VistaCuenta también lo requiere
+        panelTransacciones = new VistaTransaccion(); // Pásale su Service si lo requiere
+
+        // 6. Agregar las pestañas
         tabbedPane.addTab("Clientes", panelClientes);
         tabbedPane.addTab("Cuentas", panelCuentas);
         tabbedPane.addTab("Transacciones", panelTransacciones);
 
-        // 6. Agregar el TabbedPane al centro
+        // 7. Agregar el TabbedPane al centro
         add(tabbedPane, BorderLayout.CENTER);
 
-        // 7. Pie de página (Barra de estado)
+        // 8. Pie de página (Barra de estado)
         JPanel panelFooter = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel lblStatus = new JLabel("  Estado: Listo | Conectado a Banco Unicatólica");
         lblStatus.setFont(new Font("Arial", Font.ITALIC, 11));
