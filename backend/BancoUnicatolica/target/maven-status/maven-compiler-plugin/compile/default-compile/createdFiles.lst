@@ -31,10 +31,12 @@ com\unicatolica\banco\dao\ClienteDAO.class
 com\unicatolica\banco\vistas\VistaCliente.class
 com\unicatolica\banco\service\TransaccionService.class
 com\unicatolica\banco\service\ClienteService.class
+com\unicatolica\banco\vistas\eventos\TransaccionListener.class
 com\unicatolica\banco\config\MainPruebaCuentaService.class
 com\unicatolica\banco\config\MainPruebaTransaccionService.class
 com\unicatolica\banco\vistas\VistaCuenta$2.class
 com\unicatolica\banco\dto\ResultadoTransaccionDTO.class
+com\unicatolica\banco\vistas\VistaTransaccion$3.class
 com\unicatolica\banco\config\PruebaEliminarCliente.class
 com\unicatolica\banco\config\PruebaBuscarCliente.class
 com\unicatolica\banco\model\Cuenta.class

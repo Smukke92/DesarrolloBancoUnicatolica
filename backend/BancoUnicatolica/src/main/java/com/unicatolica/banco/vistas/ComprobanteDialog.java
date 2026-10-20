@@ -86,10 +86,10 @@ public class ComprobanteDialog extends JDialog {
         JPanel panelFooter = new JPanel(new FlowLayout(FlowLayout.CENTER));
         panelFooter.setBackground(Color.WHITE);
 
-        JButton btnAceptar = new JButton("✓ Aceptar y Cerrar");
+        JButton btnAceptar = new JButton("Aceptar y Cerrar");
         btnAceptar.setFont(new Font("Arial", Font.BOLD, 13));
         btnAceptar.setBackground(new Color(26, 54, 93));
-        btnAceptar.setForeground(Color.WHITE);
+        btnAceptar.setForeground(Color.BLACK);
         btnAceptar.setFocusPainted(false);
         btnAceptar.addActionListener(e -> dispose());
 

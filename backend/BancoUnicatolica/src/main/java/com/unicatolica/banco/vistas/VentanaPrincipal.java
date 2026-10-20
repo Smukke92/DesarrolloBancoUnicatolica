@@ -13,7 +13,7 @@ public class VentanaPrincipal extends JFrame {
     private VistaCliente panelClientes;
     private VistaCuenta panelCuentas;
     private VistaTransaccion panelTransacciones;
-
+    
     public VentanaPrincipal() {
         // 1. Configuración de la ventana principal
         setTitle("Banco Unicatólica - Sistema de Gestión Bancaria");
@@ -39,20 +39,25 @@ public class VentanaPrincipal extends JFrame {
         ClienteDAO clienteDAO = new ClienteDAO();
         ClienteService clienteService = new ClienteServiceImpl(clienteDAO);
 
-        // 5. Instanciar los paneles inyectándoles los servicios correspondientes
+        // 5. Instanciar los paneles de la vista
         panelClientes = new VistaCliente(clienteService);
-        panelCuentas = new VistaCuenta(); // Pásale su Service si tu VistaCuenta también lo requiere
-        panelTransacciones = new VistaTransaccion(); // Pásale su Service si lo requiere
+        panelCuentas = new VistaCuenta();
+        panelTransacciones = new VistaTransaccion();
 
-        // 6. Agregar las pestañas
+        // 6. Conectar Observer: Refrescar VistaCuenta cuando ocurra una transacción
+        panelTransacciones.addTransaccionListener(() -> {
+            panelCuentas.recargarDatos();
+        });
+
+        // 7. Agregar las pestañas
         tabbedPane.addTab("Clientes", panelClientes);
         tabbedPane.addTab("Cuentas", panelCuentas);
         tabbedPane.addTab("Transacciones", panelTransacciones);
 
-        // 7. Agregar el TabbedPane al centro
+        // 8. Agregar el TabbedPane al centro
         add(tabbedPane, BorderLayout.CENTER);
 
-        // 8. Pie de página (Barra de estado)
+        // 9. Pie de página (Barra de estado)
         JPanel panelFooter = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel lblStatus = new JLabel("  Estado: Listo | Conectado a Banco Unicatólica");
         lblStatus.setFont(new Font("Arial", Font.ITALIC, 11));

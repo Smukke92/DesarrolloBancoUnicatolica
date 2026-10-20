@@ -1,6 +1,13 @@
 package com.unicatolica.banco.vistas;
 
+import com.unicatolica.banco.dto.ClienteDTO;
 import com.unicatolica.banco.dto.CuentaDTO;
+import com.unicatolica.banco.dto.FiltroCuentaDTO;
+import com.unicatolica.banco.model.enums.EstadoCuenta;
+import com.unicatolica.banco.service.ClienteService;
+import com.unicatolica.banco.service.CuentaService;
+import com.unicatolica.banco.service.impl.ClienteServiceImpl;
+import com.unicatolica.banco.service.impl.CuentaServiceImpl;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -10,8 +17,13 @@ import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
+import java.util.List;
 
 public class VistaCuenta extends JPanel {
+
+    // Capa de Servicios
+    private final CuentaService cuentaService;
+    private final ClienteService clienteService;
 
     // Componentes del formulario
     private JTextField txtNumeroCuenta;
@@ -31,7 +43,13 @@ public class VistaCuenta extends JPanel {
     private JTable tablaCuentas;
     private DefaultTableModel modeloTabla;
 
+    // Variable de apoyo para guardar el ID de la cuenta seleccionada
+    private Integer idCuentaSeleccionada = null;
+
     public VistaCuenta() {
+        this.cuentaService = new CuentaServiceImpl();
+        this.clienteService = new ClienteServiceImpl();
+
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(247, 250, 252));
 
@@ -51,6 +69,9 @@ public class VistaCuenta extends JPanel {
         splitPane.setResizeWeight(0.4);
 
         add(splitPane, BorderLayout.CENTER);
+
+        // 5. Cargar datos iniciales
+        cargarTablaCuentas();
     }
 
     private JPanel crearPanelFormulario() {
@@ -77,7 +98,7 @@ public class VistaCuenta extends JPanel {
         txtSaldoDisplay.setEditable(false);
         txtSaldoDisplay.setBackground(new Color(230, 235, 240));
 
-        // Fila 0: ID Cliente / Titular
+        // Fila 0: ID / Cédula Titular
         gbc.gridx = 0; gbc.gridy = 0;
         panel.add(new JLabel("Cédula / ID Titular*:"), gbc);
         gbc.gridx = 1;
@@ -147,7 +168,7 @@ public class VistaCuenta extends JPanel {
 
         panel.add(panelBusqueda, BorderLayout.NORTH);
 
-        String[] columnas = {"ID", "N° Cuenta", "Cédula Titular", "Nombre Titular", "Tipo", "Estado", "Saldo ($)"};
+        String[] columnas = {"ID", "N° Cuenta", "ID Titular", "Nombre Titular", "Tipo", "Estado", "Saldo ($)"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -169,7 +190,7 @@ public class VistaCuenta extends JPanel {
         btnDesactivar.addActionListener(e -> accionInactivarCuenta());
         btnBuscar.addActionListener(e -> accionBuscarCuenta());
 
-        // Evento de Selección en Tabla (Autocompletar formulario)
+        // Evento de Selección en Tabla
         tablaCuentas.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && tablaCuentas.getSelectedRow() != -1) {
                 cargarDatosSeleccionados();
@@ -177,54 +198,106 @@ public class VistaCuenta extends JPanel {
         });
     }
 
+    private void cargarTablaCuentas() {
+        try {
+            List<CuentaDTO> lista = cuentaService.listarCuentas();
+            actualizarModeloTabla(lista);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar la lista de cuentas: " + e.getMessage(),
+                    "Error de Carga", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void actualizarModeloTabla(List<CuentaDTO> cuentas) {
+        modeloTabla.setRowCount(0);
+        for (CuentaDTO c : cuentas) {
+            Object[] fila = new Object[]{
+                c.getIdCuenta(),
+                c.getNumeroCuenta(),
+                c.getIdCliente(),
+                c.getNombreCliente() != null ? c.getNombreCliente() : "Sin Nombre",
+                c.getTipoCuenta(),
+                c.getEstado(),
+                String.format("%.2f", c.getSaldo())
+            };
+            modeloTabla.addRow(fila);
+        }
+    }
+
     private void accionRegistrarCuenta() {
         if (!validarCamposObligatorios()) {
             JOptionPane.showMessageDialog(this,
-                    "Debe ingresar la cédula del titular y el número de cuenta.",
+                    "Debe ingresar la cédula/ID del titular y el número de cuenta.",
                     "Campos Incompletos", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        CuentaDTO dto = new CuentaDTO();
-        dto.setNumeroCuenta(txtNumeroCuenta.getText().trim());
-        dto.setTipoCuenta(cbTipoCuenta.getSelectedItem().toString());
-        dto.setEstado("ACTIVA"); // El contrato especifica estado inicial ACTIVA
+        try {
+            Integer idClienteInput = obtenerIdClienteDesdeInput(txtIdCliente.getText().trim());
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // cuentaService.registrarCuenta(dto);
+            CuentaDTO dto = new CuentaDTO();
+            dto.setIdCliente(idClienteInput);
+            dto.setNumeroCuenta(txtNumeroCuenta.getText().trim());
+            dto.setTipoCuenta(cbTipoCuenta.getSelectedItem().toString());
 
-        JOptionPane.showMessageDialog(this,
-                "Cuenta registrada exitosamente.",
-                "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
+            cuentaService.registrarCuenta(dto);
 
-        limpiarFormulario();
+            JOptionPane.showMessageDialog(this,
+                    "Cuenta registrada exitosamente.",
+                    "Registro Exitoso", JOptionPane.INFORMATION_MESSAGE);
+
+            limpiarFormulario();
+            cargarTablaCuentas();
+
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    traducirError(e.getMessage()),
+                    "Error de Validación", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al registrar cuenta: " + e.getMessage(),
+                    "Error Interno", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void accionModificarCuenta() {
-        if (txtNumeroCuenta.isEnabled()) {
+        if (idCuentaSeleccionada == null) {
             JOptionPane.showMessageDialog(this,
                     "Debe seleccionar una cuenta de la tabla para modificar su tipo o estado.",
                     "Selección Requerida", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        CuentaDTO dto = new CuentaDTO();
-        dto.setNumeroCuenta(txtNumeroCuenta.getText().trim());
-        dto.setTipoCuenta(cbTipoCuenta.getSelectedItem().toString());
-        dto.setEstado(cbEstadoCuenta.getSelectedItem().toString());
+        try {
+            CuentaDTO dto = new CuentaDTO();
+            dto.setIdCuenta(idCuentaSeleccionada);
+            dto.setNumeroCuenta(txtNumeroCuenta.getText().trim());
+            dto.setTipoCuenta(cbTipoCuenta.getSelectedItem().toString());
+            dto.setEstado(cbEstadoCuenta.getSelectedItem().toString());
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // cuentaService.actualizarCuenta(dto);
+            cuentaService.actualizarCuenta(dto);
 
-        JOptionPane.showMessageDialog(this,
-                "Información de la cuenta actualizada correctamente.",
-                "Actualización Exitosa", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Información de la cuenta actualizada correctamente.",
+                    "Actualización Exitosa", JOptionPane.INFORMATION_MESSAGE);
 
-        limpiarFormulario();
+            limpiarFormulario();
+            cargarTablaCuentas();
+
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    traducirError(e.getMessage()),
+                    "Error de Validación", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al actualizar la cuenta: " + e.getMessage(),
+                    "Error Interno", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void accionInactivarCuenta() {
-        if (txtNumeroCuenta.isEnabled() && tablaCuentas.getSelectedRow() == -1) {
+        if (idCuentaSeleccionada == null) {
             JOptionPane.showMessageDialog(this,
                     "Debe seleccionar una cuenta de la tabla para inactivarla.",
                     "Selección Requerida", JOptionPane.WARNING_MESSAGE);
@@ -236,39 +309,66 @@ public class VistaCuenta extends JPanel {
                 "Confirmar Inactivación", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (confirmacion == JOptionPane.YES_OPTION) {
-            // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-            // cuentaService.cambiarEstadoCuenta(idCuenta, EstadoCuenta.INACTIVA);
+            try {
+                cuentaService.cambiarEstadoCuenta(idCuentaSeleccionada, EstadoCuenta.INACTIVA);
 
-            JOptionPane.showMessageDialog(this,
-                    "El estado de la cuenta ha sido cambiado a INACTIVA.",
-                    "Operación Completada", JOptionPane.INFORMATION_MESSAGE);
-            limpiarFormulario();
+                JOptionPane.showMessageDialog(this,
+                        "El estado de la cuenta ha sido cambiado a INACTIVA.",
+                        "Operación Completada", JOptionPane.INFORMATION_MESSAGE);
+
+                limpiarFormulario();
+                cargarTablaCuentas();
+
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this,
+                        traducirError(e.getMessage()),
+                        "Error de Operación", JOptionPane.WARNING_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al inactivar la cuenta: " + e.getMessage(),
+                        "Error Interno", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
     private void accionBuscarCuenta() {
         String criterio = txtBuscarCuenta.getText().trim();
         if (criterio.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese un número de cuenta o cédula para realizar la búsqueda.",
-                    "Criterio Vacío", JOptionPane.INFORMATION_MESSAGE);
+            cargarTablaCuentas();
             return;
         }
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // List<CuentaDTO> resultados = cuentaService.buscarCuentas(filtro);
+        try {
+            FiltroCuentaDTO filtro = new FiltroCuentaDTO();
+            filtro.setNumeroCuenta(criterio);
+
+            try {
+                Integer idCliente = Integer.parseInt(criterio);
+                filtro.setIdCliente(idCliente);
+            } catch (NumberFormatException ignored) {
+                // Si el criterio no es numérico entero simple, busca como número de cuenta
+            }
+
+            List<CuentaDTO> resultados = cuentaService.buscarCuentas(filtro);
+            actualizarModeloTabla(resultados);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al buscar cuentas: " + e.getMessage(),
+                    "Error de Búsqueda", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void cargarDatosSeleccionados() {
         int fila = tablaCuentas.getSelectedRow();
         if (fila >= 0) {
+            idCuentaSeleccionada = Integer.parseInt(modeloTabla.getValueAt(fila, 0).toString());
             txtNumeroCuenta.setText(modeloTabla.getValueAt(fila, 1).toString());
             txtIdCliente.setText(modeloTabla.getValueAt(fila, 2).toString());
             cbTipoCuenta.setSelectedItem(modeloTabla.getValueAt(fila, 4).toString());
             cbEstadoCuenta.setSelectedItem(modeloTabla.getValueAt(fila, 5).toString());
             txtSaldoDisplay.setText("$ " + modeloTabla.getValueAt(fila, 6).toString());
 
-            // RF07: El número de cuenta y el titular no deben ser editables
             txtNumeroCuenta.setEnabled(false);
             txtNumeroCuenta.setBackground(new Color(235, 235, 235));
             txtIdCliente.setEnabled(false);
@@ -277,6 +377,7 @@ public class VistaCuenta extends JPanel {
     }
 
     private void limpiarFormulario() {
+        idCuentaSeleccionada = null;
         txtNumeroCuenta.setText("");
         txtIdCliente.setText("");
         cbTipoCuenta.setSelectedIndex(0);
@@ -292,8 +393,41 @@ public class VistaCuenta extends JPanel {
         tablaCuentas.clearSelection();
     }
 
+    private Integer obtenerIdClienteDesdeInput(String input) {
+        Integer idParsed = Integer.parseInt(input);
+        
+        // Si no existe directamente por ID numérico, valida si ingresaron una Cédula
+        try {
+            ClienteDTO cliente = clienteService.buscarClientes(input).stream()
+                    .filter(c -> input.equals(c.getCedula()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (cliente != null) {
+                return cliente.getIdCliente();
+            }
+        } catch (Exception ignored) {
+        }
+
+        return idParsed;
+    }
+
     private boolean validarCamposObligatorios() {
         return !txtNumeroCuenta.getText().trim().isEmpty() && !txtIdCliente.getText().trim().isEmpty();
+    }
+
+    private String traducirError(String codigo) {
+        if (codigo == null) return "Ocurrió un error inesperado.";
+        return switch (codigo) {
+            case "CLIENTE_NO_ENCONTRADO" -> "El titular / cliente especificado no existe.";
+            case "NUMERO_CUENTA_DUPLICADO" -> "El número de cuenta ingresado ya se encuentra registrado.";
+            case "NUMERO_CUENTA_INVALIDO" -> "El número de cuenta ingresado no es válido.";
+            case "TIPO_CUENTA_NO_VALIDO" -> "El tipo de cuenta no es válido (solo AHORROS o CORRIENTE).";
+            case "ESTADO_CUENTA_NO_VALIDO" -> "El estado especificado no es válido.";
+            case "EL_NUMERO_DE_CUENTA_NO_SE_PUEDE_MODIFICAR" -> "El número de cuenta no se puede modificar.";
+            case "CUENTA_NO_PUEDE_ELIMINARSE" -> "La cuenta no puede eliminarse ni inactivarse si tiene saldo o movimientos.";
+            default -> codigo;
+        };
     }
 
     private void configurarValidacionesCampos() {
@@ -322,5 +456,9 @@ public class VistaCuenta extends JPanel {
                 }
             }
         });
+    }
+    
+    public void recargarDatos() {
+        cargarTablaCuentas();
     }
 }

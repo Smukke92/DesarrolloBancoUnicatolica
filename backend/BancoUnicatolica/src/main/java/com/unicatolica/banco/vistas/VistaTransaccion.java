@@ -1,5 +1,14 @@
 package com.unicatolica.banco.vistas;
 
+import com.unicatolica.banco.dto.CuentaDTO;
+import com.unicatolica.banco.dto.ResultadoTransaccionDTO;
+import com.unicatolica.banco.dto.TransaccionDTO;
+import com.unicatolica.banco.service.CuentaService;
+import com.unicatolica.banco.service.TransaccionService;
+import com.unicatolica.banco.service.impl.CuentaServiceImpl;
+import com.unicatolica.banco.service.impl.TransaccionServiceImpl;
+import com.unicatolica.banco.vistas.eventos.TransaccionListener;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
@@ -9,50 +18,83 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.DocumentFilter;
 import java.awt.*;
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VistaTransaccion extends JPanel {
 
-    // Componentes para la sección de Operaciones (Depósito / Retiro)
-    private JTextField txtCuentaOp;
-    private JButton btnConsultarOp;
-    private JLabel lblInfoTitular;
-    private JLabel lblInfoTipoEstado;
-    private JLabel lblInfoSaldo;
-    private JTextField txtMonto;
-    private JButton btnDeposito;
-    private JButton btnRetiro;
+    // Capa de Servicios
+    private final TransaccionService transaccionService;
+    private final CuentaService cuentaService;
+    
+    // Lista de observadores que reaccionarán a las transacciones
+    private final List<TransaccionListener> listeners = new ArrayList<>();
+    
+    // Componentes de búsqueda y datos de la cuenta
+    private JTextField txtNumeroCuenta;
+    private JButton btnBuscarCuenta;
+    private JTextField txtTitularDisplay;
+    private JTextField txtTipoDisplay;
+    private JTextField txtEstadoDisplay;
+    private JTextField txtSaldoDisplay;
 
-    // Componentes para la sección de Estado de Cuenta e Historial
-    private JTextField txtCuentaHist;
-    private JButton btnConsultarHist;
-    private JLabel lblHistTitular;
-    private JLabel lblHistCedula;
-    private JLabel lblHistTipoEstado;
-    private JLabel lblHistSaldo;
-    private JTable tablaTransacciones;
+    // Componentes para registrar transacción
+    private JComboBox<String> cbTipoTransaccion;
+    private JTextField txtMonto;
+    private JButton btnProcesar;
+    private JButton btnLimpiar;
+
+    // Tabla de Historial
+    private JTable tablaHistorial;
     private DefaultTableModel modeloTabla;
 
+    // Formateador de fecha/hora para la tabla
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+    
+    public void addTransaccionListener(TransaccionListener listener) {
+        if (listener != null) {
+            listeners.add(listener);
+        }
+    }
+
+    private void notificarTransaccionRealizada() {
+        for (TransaccionListener listener : listeners) {
+            listener.onTransaccionRealizada();
+        }
+    }
+    
     public VistaTransaccion() {
+        this.transaccionService = new TransaccionServiceImpl();
+        this.cuentaService = new CuentaServiceImpl();
+
         setLayout(new BorderLayout(10, 10));
         setBackground(new Color(247, 250, 252));
 
-        JTabbedPane subTabbedPane = new JTabbedPane();
-        subTabbedPane.setFont(new Font("Arial", Font.PLAIN, 13));
+        // 1. Crear Paneles
+        JPanel panelIzquierdo = new JPanel(new BorderLayout(5, 5));
+        panelIzquierdo.add(crearPanelCuenta(), BorderLayout.NORTH);
+        panelIzquierdo.add(crearPanelOperaciones(), BorderLayout.CENTER);
 
-        subTabbedPane.addTab("Realizar Depósito / Retiro", crearPanelOperaciones());
-        subTabbedPane.addTab("Estado de Cuenta e Historial", crearPanelEstadoCuenta());
+        JPanel panelHistorial = crearPanelHistorial();
 
+        // 2. Configurar Validaciones y Eventos
         configurarValidacionesCampos();
         asignarEventos();
 
-        add(subTabbedPane, BorderLayout.CENTER);
+        // 3. JSplitPane para dividir operaciones e historial
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panelIzquierdo, panelHistorial);
+        splitPane.setDividerLocation(420);
+        splitPane.setResizeWeight(0.45);
+
+        add(splitPane, BorderLayout.CENTER);
     }
 
-    private JPanel crearPanelOperaciones() {
-        JPanel panelPrincipal = new JPanel(new GridBagLayout());
-        panelPrincipal.setBorder(BorderFactory.createTitledBorder(
+    private JPanel crearPanelCuenta() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(26, 54, 93)),
-                "Registro de Depósitos y Retiros",
+                "Consulta de Cuenta",
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 new Font("Arial", Font.BOLD, 14),
@@ -60,122 +102,106 @@ public class VistaTransaccion extends JPanel {
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        txtCuentaOp = new JTextField(15);
-        btnConsultarOp = new JButton("Consultar Cuenta");
+        txtNumeroCuenta = new JTextField(12);
+        btnBuscarCuenta = new JButton("🔍 Consultar");
 
-        lblInfoTitular = new JLabel("-");
-        lblInfoTipoEstado = new JLabel("-");
-        lblInfoSaldo = new JLabel("$ 0.00");
-        lblInfoSaldo.setFont(new Font("Arial", Font.BOLD, 14));
-        lblInfoSaldo.setForeground(new Color(26, 54, 93));
+        txtTitularDisplay = crearCampoLectura();
+        txtTipoDisplay = crearCampoLectura();
+        txtEstadoDisplay = crearCampoLectura();
+        txtSaldoDisplay = crearCampoLectura();
 
-        txtMonto = new JTextField(15);
-        btnDeposito = new JButton("Registrar Depósito");
-        btnDeposito.setBackground(new Color(40, 167, 69));
-        btnDeposito.setForeground(Color.WHITE);
-
-        btnRetiro = new JButton("Registrar Retiro");
-        btnRetiro.setBackground(new Color(220, 53, 69));
-        btnRetiro.setForeground(Color.WHITE);
-
-        // Fila 0: Búsqueda de Cuenta
+        // Búsqueda
         gbc.gridx = 0; gbc.gridy = 0;
-        panelPrincipal.add(new JLabel("Número de Cuenta*:"), gbc);
+        panel.add(new JLabel("N° Cuenta*:"), gbc);
         gbc.gridx = 1;
-        panelPrincipal.add(txtCuentaOp, gbc);
-        gbc.gridx = 2;
-        panelPrincipal.add(btnConsultarOp, gbc);
+        
+        JPanel pnlBusqueda = new JPanel(new BorderLayout(5, 0));
+        pnlBusqueda.add(txtNumeroCuenta, BorderLayout.CENTER);
+        pnlBusqueda.add(btnBuscarCuenta, BorderLayout.EAST);
+        panel.add(pnlBusqueda, gbc);
 
-        // Fila 1: Separador
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 3;
-        panelPrincipal.add(new JSeparator(), gbc);
+        // Información de la Cuenta
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Titular:"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtTitularDisplay, gbc);
 
-        // Fila 2: Información Titular
-        gbc.gridwidth = 1;
         gbc.gridx = 0; gbc.gridy = 2;
-        panelPrincipal.add(new JLabel("Titular:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 2;
-        panelPrincipal.add(lblInfoTitular, gbc);
+        panel.add(new JLabel("Tipo Cuenta:"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtTipoDisplay, gbc);
 
-        // Fila 3: Tipo y Estado
-        gbc.gridwidth = 1;
         gbc.gridx = 0; gbc.gridy = 3;
-        panelPrincipal.add(new JLabel("Tipo / Estado:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 2;
-        panelPrincipal.add(lblInfoTipoEstado, gbc);
+        panel.add(new JLabel("Estado:"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtEstadoDisplay, gbc);
 
-        // Fila 4: Saldo Actual
-        gbc.gridwidth = 1;
         gbc.gridx = 0; gbc.gridy = 4;
-        panelPrincipal.add(new JLabel("Saldo Disponible:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 2;
-        panelPrincipal.add(lblInfoSaldo, gbc);
+        panel.add(new JLabel("Saldo Disponible:"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtSaldoDisplay, gbc);
 
-        // Fila 5: Separador
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 3;
-        panelPrincipal.add(new JSeparator(), gbc);
-
-        // Fila 6: Monto
-        gbc.gridwidth = 1;
-        gbc.gridx = 0; gbc.gridy = 6;
-        panelPrincipal.add(new JLabel("Monto de la Operación ($)*:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 2;
-        panelPrincipal.add(txtMonto, gbc);
-
-        // Fila 7: Botones
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 5));
-        panelBotones.add(btnDeposito);
-        panelBotones.add(btnRetiro);
-
-        gbc.gridx = 0; gbc.gridy = 7; gbc.gridwidth = 3;
-        gbc.insets = new Insets(15, 8, 8, 8);
-        panelPrincipal.add(panelBotones, gbc);
-
-        return panelPrincipal;
+        return panel;
     }
 
-    private JPanel crearPanelEstadoCuenta() {
-        JPanel panel = new JPanel(new BorderLayout(10, 10));
+    private JPanel crearPanelOperaciones() {
+        JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(26, 54, 93)),
-                "Consulta Consolidada de Estado de Cuenta)",
+                "Registrar Transacción",
                 TitledBorder.LEFT,
                 TitledBorder.TOP,
                 new Font("Arial", Font.BOLD, 14),
                 new Color(26, 54, 93)
         ));
 
-        JPanel panelNorte = new JPanel(new BorderLayout(5, 5));
-        
-        JPanel panelBusqueda = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtCuentaHist = new JTextField(15);
-        btnConsultarHist = new JButton("🔍 Ver Estado de Cuenta");
-        panelBusqueda.add(new JLabel("Número de Cuenta:"));
-        panelBusqueda.add(txtCuentaHist);
-        panelBusqueda.add(btnConsultarHist);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 5, 8, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JPanel panelDatosConsolidados = new JPanel(new GridLayout(2, 2, 10, 5));
-        panelDatosConsolidados.setBorder(BorderFactory.createEtchedBorder());
-        lblHistTitular = new JLabel(" Titular: -");
-        lblHistCedula = new JLabel(" Cédula: -");
-        lblHistTipoEstado = new JLabel(" Tipo / Estado: -");
-        lblHistSaldo = new JLabel(" Saldo Actual: $ 0.00");
-        lblHistSaldo.setFont(new Font("Arial", Font.BOLD, 12));
+        cbTipoTransaccion = new JComboBox<>(new String[]{"DEPOSITO", "RETIRO"});
+        txtMonto = new JTextField(12);
 
-        panelDatosConsolidados.add(lblHistTitular);
-        panelDatosConsolidados.add(lblHistCedula);
-        panelDatosConsolidados.add(lblHistTipoEstado);
-        panelDatosConsolidados.add(lblHistSaldo);
+        btnProcesar = new JButton("💳 Realizar Transacción");
+        btnLimpiar = new JButton("Limpiar");
 
-        panelNorte.add(panelBusqueda, BorderLayout.NORTH);
-        panelNorte.add(panelDatosConsolidados, BorderLayout.CENTER);
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Tipo Transacción*:"), gbc);
+        gbc.gridx = 1;
+        panel.add(cbTipoTransaccion, gbc);
 
-        panel.add(panelNorte, BorderLayout.NORTH);
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Monto ($)*:"), gbc);
+        gbc.gridx = 1;
+        panel.add(txtMonto, gbc);
 
-        String[] columnas = {"Código Transacción", "Fecha / Hora", "Tipo Movimiento", "Valor ($)"};
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        panelBotones.add(btnProcesar);
+        panelBotones.add(btnLimpiar);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.insets = new Insets(15, 5, 5, 5);
+        panel.add(panelBotones, gbc);
+
+        return panel;
+    }
+
+    private JPanel crearPanelHistorial() {
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(26, 54, 93)),
+                "Historial de Movimientos",
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Arial", Font.BOLD, 14),
+                new Color(26, 54, 93)
+        ));
+
+        String[] columnas = {"ID Tx", "Tipo", "Monto ($)", "Fecha y Hora"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -183,48 +209,67 @@ public class VistaTransaccion extends JPanel {
             }
         };
 
-        tablaTransacciones = new JTable(modeloTabla);
-        JScrollPane scrollPane = new JScrollPane(tablaTransacciones);
+        tablaHistorial = new JTable(modeloTabla);
+        JScrollPane scrollPane = new JScrollPane(tablaHistorial);
         panel.add(scrollPane, BorderLayout.CENTER);
 
         return panel;
     }
 
     private void asignarEventos() {
-        btnConsultarOp.addActionListener(e -> accionConsultarCuentaOp());
-        btnDeposito.addActionListener(e -> accionProcesarOperacion("DEPOSITO"));
-        btnRetiro.addActionListener(e -> accionProcesarOperacion("RETIRO"));
-        btnConsultarHist.addActionListener(e -> accionConsultarHistorial());
+        btnBuscarCuenta.addActionListener(e -> accionBuscarCuenta());
+        txtNumeroCuenta.addActionListener(e -> accionBuscarCuenta());
+        btnProcesar.addActionListener(e -> accionProcesarTransaccion());
+        btnLimpiar.addActionListener(e -> limpiarCampos());
     }
 
-    private void accionConsultarCuentaOp() {
-        String numCuenta = txtCuentaOp.getText().trim();
+    private void accionBuscarCuenta() {
+        String numCuenta = txtNumeroCuenta.getText().trim();
         if (numCuenta.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Ingrese un número de cuenta para consultar.",
-                    "Campo Requerido", JOptionPane.WARNING_MESSAGE);
+                    "Campo Vacío", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // CuentaDTO cuenta = transaccionService.consultarCuentaParaTransaccion(numCuenta);
+        try {
+            CuentaDTO cuenta = transaccionService.consultarCuentaParaTransaccion(numCuenta);
+
+            txtTitularDisplay.setText(cuenta.getNombreCliente());
+            txtTipoDisplay.setText(cuenta.getTipoCuenta());
+            txtEstadoDisplay.setText(cuenta.getEstado());
+            txtSaldoDisplay.setText("$ " + String.format("%.2f", cuenta.getSaldo()));
+
+            cargarHistorial(numCuenta);
+
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    traducirError(e.getMessage()),
+                    "Cuenta No Encontrada", JOptionPane.WARNING_MESSAGE);
+            limpiarDetallesCuenta();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al buscar la cuenta: " + e.getMessage(),
+                    "Error Interno", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    private void accionProcesarOperacion(String tipoOperacion) {
-        String numCuenta = txtCuentaOp.getText().trim();
+    private void accionProcesarTransaccion() {
+        String numCuenta = txtNumeroCuenta.getText().trim();
+        String tipoTransaccion = cbTipoTransaccion.getSelectedItem().toString();
         String montoTexto = txtMonto.getText().trim();
 
-        if (numCuenta.isEmpty()) {
+        if (numCuenta.isEmpty() || txtTitularDisplay.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Debe ingresar y consultar una cuenta antes de realizar una operación.",
-                    "Cuenta Requerida", JOptionPane.WARNING_MESSAGE);
+                    "Debe consultar una cuenta válida antes de registrar una transacción.",
+                    "Validación Requerida", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (montoTexto.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Ingrese el monto a " + (tipoOperacion.equals("DEPOSITO") ? "depositar." : "retirar."),
-                    "Monto Requerido", JOptionPane.WARNING_MESSAGE);
+                    "Ingrese el monto de la transacción.",
+                    "Campo Vacío", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -232,52 +277,112 @@ public class VistaTransaccion extends JPanel {
             BigDecimal monto = new BigDecimal(montoTexto);
             if (monto.compareTo(BigDecimal.ZERO) <= 0) {
                 JOptionPane.showMessageDialog(this,
-                        "El monto de la transacción debe ser mayor que cero ($ 0.00).",
+                        "El monto debe ser un valor mayor a cero.",
                         "Monto Inválido", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            if (tipoOperacion.equals("DEPOSITO")) {
-                // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-                // ResultadoTransaccionDTO res = transaccionService.registrarDeposito(numCuenta, monto);
+            ResultadoTransaccionDTO resultado;
+            if ("DEPOSITO".equalsIgnoreCase(tipoTransaccion)) {
+                resultado = transaccionService.registrarDeposito(numCuenta, monto);
             } else {
-                // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-                // ResultadoTransaccionDTO res = transaccionService.registrarRetiro(numCuenta, monto);
+                resultado = transaccionService.registrarRetiro(numCuenta, monto);
             }
 
-            JOptionPane.showMessageDialog(this,
-                    "Operación de " + tipoOperacion + " procesada exitosamente.",
-                    "Transacción Completada", JOptionPane.INFORMATION_MESSAGE);
-
+            // Actualizar interfaz con el nuevo saldo
+            txtSaldoDisplay.setText("$ " + String.format("%.2f", resultado.getSaldoNuevo()));
+            cargarHistorial(numCuenta);
             txtMonto.setText("");
+            
+            // NOTIFICAR A OTRAS VISTAS (Como VistaCuenta) QUE HUBO UN CAMBIO DE SALDO
+            notificarTransaccionRealizada();
+            
+            // Abrir comprobante de transacción emergente
+            Frame parentFrame = (Frame) SwingUtilities.getWindowAncestor(this);
+            ComprobanteDialog dialog = new ComprobanteDialog(parentFrame, resultado);
+            dialog.setVisible(true);
 
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
-                    "Ingrese un monto numérico válido.",
-                    "Formato Incorrecto", JOptionPane.ERROR_MESSAGE);
+                    "El monto ingresado no es una cantidad numérica válida.",
+                    "Formato Inválido", JOptionPane.WARNING_MESSAGE);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this,
+                    traducirError(e.getMessage()),
+                    "Error de Transacción", JOptionPane.WARNING_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al procesar la transacción: " + e.getMessage(),
+                    "Error Interno", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void accionConsultarHistorial() {
-        String numCuenta = txtCuentaHist.getText().trim();
-        if (numCuenta.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Ingrese un número de cuenta para consultar el estado de cuenta e historial.",
-                    "Campo Requerido", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+    private void cargarHistorial(String numCuenta) {
+        try {
+            List<TransaccionDTO> historial = transaccionService.listarTransaccionesPorCuenta(numCuenta);
+            modeloTabla.setRowCount(0);
 
-        // AQUÍ SE INVOCARÁ EL SERVICE REAL:
-        // EstadoCuentaDTO estado = transaccionService.consultarEstadoCuenta(numCuenta);
+            for (TransaccionDTO t : historial) {
+                String fechaFormateada = t.getFechaHora() != null 
+                        ? t.getFechaHora().format(formatter) 
+                        : "";
+
+                Object[] fila = new Object[]{
+                    t.getIdTransaccion(),
+                    t.getTipoTransaccion(),
+                    String.format("%.2f", t.getMonto()),
+                    fechaFormateada
+                };
+                modeloTabla.addRow(fila);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar historial: " + e.getMessage(),
+                    "Error de Carga", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void limpiarCampos() {
+        txtNumeroCuenta.setText("");
+        txtMonto.setText("");
+        cbTipoTransaccion.setSelectedIndex(0);
+        limpiarDetallesCuenta();
+    }
+
+    private void limpiarDetallesCuenta() {
+        txtTitularDisplay.setText("");
+        txtTipoDisplay.setText("");
+        txtEstadoDisplay.setText("");
+        txtSaldoDisplay.setText("$ 0.00");
+        modeloTabla.setRowCount(0);
+    }
+
+    private JTextField crearCampoLectura() {
+        JTextField campo = new JTextField(15);
+        campo.setEditable(false);
+        campo.setBackground(new Color(230, 235, 240));
+        return campo;
+    }
+
+    private String traducirError(String codigo) {
+        if (codigo == null) return "Ocurrió un error inesperado.";
+        return switch (codigo) {
+            case "CUENTA_NO_ENCONTRADA" -> "La cuenta especificada no existe en el sistema.";
+            case "CUENTA_INACTIVA" -> "No se pueden realizar operaciones en una cuenta INACTIVA.";
+            case "MONTO_INVALIDO" -> "El monto de la transacción debe ser mayor a cero.";
+            case "FONDOS_INSUFICIENTES" -> "Saldo insuficiente para realizar el retiro solicitado.";
+            case "NUMERO_CUENTA_INVALIDO" -> "El número de cuenta ingresado no es válido.";
+            default -> codigo;
+        };
     }
 
     private void configurarValidacionesCampos() {
-        aplicarFiltro(txtCuentaOp, "[0-9]+", 12);
-        aplicarFiltro(txtCuentaHist, "[0-9]+", 12);
-        aplicarFiltro(txtMonto, "[0-9\\.]+", 12);
+        aplicarFiltroTexto(txtNumeroCuenta, "[0-9]+", 12);
+        aplicarFiltroMonto(txtMonto, 10);
     }
 
-    private void aplicarFiltro(JTextField campo, String regex, int maxCaracteres) {
+    private void aplicarFiltroTexto(JTextField campo, String regex, int maxCaracteres) {
         ((AbstractDocument) campo.getDocument()).setDocumentFilter(new DocumentFilter() {
             @Override
             public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
@@ -293,6 +398,29 @@ public class VistaTransaccion extends JPanel {
                 if (text == null) return;
                 int nuevoLargo = fb.getDocument().getLength() - length + text.length();
                 if (text.isEmpty() || (nuevoLargo <= maxCaracteres && text.matches(regex))) {
+                    super.replace(fb, offset, length, text, attrs);
+                }
+            }
+        });
+    }
+
+    private void aplicarFiltroMonto(JTextField campo, int maxCaracteres) {
+        ((AbstractDocument) campo.getDocument()).setDocumentFilter(new DocumentFilter() {
+            @Override
+            public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+                if (string == null) return;
+                String textoFuturo = fb.getDocument().getText(0, fb.getDocument().getLength()) + string;
+                if (textoFuturo.length() <= maxCaracteres && textoFuturo.matches("^[0-9]*\\.?[0-9]{0,2}$")) {
+                    super.insertString(fb, offset, string, attr);
+                }
+            }
+
+            @Override
+            public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+                if (text == null) return;
+                String textoActual = fb.getDocument().getText(0, fb.getDocument().getLength());
+                String textoFuturo = textoActual.substring(0, offset) + text + textoActual.substring(offset + length);
+                if (textoFuturo.isEmpty() || (textoFuturo.length() <= maxCaracteres && textoFuturo.matches("^[0-9]*\\.?[0-9]{0,2}$"))) {
                     super.replace(fb, offset, length, text, attrs);
                 }
             }
